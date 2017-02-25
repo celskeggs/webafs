@@ -148,22 +148,22 @@ class WebAFS(object):
 		coord_uuid = cherrypy.request.json.get("session", None)
 		access_token = cherrypy.request.json.get("token", None)
 		if access_token is None or coord_uuid is None:
-			return False, {"status": b"FAIL", "param": b"INVALID_AUTH"}
+			return False, {"status": "FAIL", "param": "INVALID_AUTH"}
 		try:
 			access_token = base64.b64decode(access_token)
 		except binascii.Error:
-			code, param = {"status": b"FAIL", "param": b"INVALID_AUTH"}
+			code, param = {"status": "FAIL", "param": "INVALID_AUTH"}
 		try:
 			coord_uuid = uuid.UUID(coord_uuid)
 		except ValueError:
-			return False, {"status": b"FAIL", "param": b"INVALID_AUTH"}
+			return False, {"status": "FAIL", "param": "INVALID_AUTH"}
 		expected = access_tokens.get(coord_uuid, None)
 		if expected is None:
-			return False, {"status": b"FAIL", "param": b"INVALID_AUTH"}
+			return False, {"status": "FAIL", "param": "INVALID_AUTH"}
 		if hmac.compare_digest(access_token, expected):
 			return True, coord_uuid
 		else:
-			return False, {"status": b"FAIL", "param": b"INVALID_AUTH"}
+			return False, {"status": "FAIL", "param": "INVALID_AUTH"}
 
 	@cherrypy.expose
 	@cherrypy.tools.json_in()

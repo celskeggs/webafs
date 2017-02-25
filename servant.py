@@ -10,6 +10,7 @@ import base64
 import sys
 import kerberos
 import subprocess
+import safe_traverse
 
 def run_aklog(ccache):
 	with tempfile.NamedTemporaryFile(prefix="webafs_ccache_") as tempf:
@@ -45,29 +46,38 @@ for line in sys.stdin:
 				if ".." in path:
 					out = (b"FAIL", b"DISALLOWED_PATH")
 				else:
-					path = "/afs/" + path
 					try:
-						with open(path, "rb") as f:
-							out = (b"FILEDATA", base64.b64encode(f.read()))
+						out = (b"FILEDATA", base64.b64encode(safe_traverse.safe_load(path)))
 					except FileNotFoundError:
 						out = (b"NOEXIST", b"")
 					except PermissionError:
 						out = (b"NOPERM", b"")
+					except OSError as e:
+						if e.errno == 40:
+							# TODO: allow some symbolic links?
+							out = (b"SYMBOLIC", b"")
+						else:
+							out = (b"OSERROR", b"")
 			elif command == b"LIST":
 				# TODO: make sure this code actually works for isolation
 				path = base64.b64decode(argument).decode()
 				if ".." in path:
 					out = (b"FAIL", b"DISALLOWED_PATH")
 				else:
-					path = "/afs/" + path
 					try:
-						out = (b"LISTDATA", base64.b64encode(json.dumps(os.listdir(path)).encode()))
+						out = (b"LISTDATA", base64.b64encode(json.dumps(safe_traverse.safe_list(path)).encode()))
 					except FileNotFoundError:
 						out = (b"NOEXIST", b"")
 					except PermissionError:
 						out = (b"NOPERM", b"")
 					except NotADirectoryError:
 						out = (b"NOTDIR", b"")
+					except OSError as e:
+						if e.errno == 40:
+							# TODO: allow some symbolic links?
+							out = (b"SYMBOLIC", b"")
+						else:
+							out = (b"OSERROR", b"")
 			else:
 				out = (b"FAIL", b"INVALID_COMMAND")
 		except:
