@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>WebAFS</title>
+  </head>
+  <body>
+    <h1>WebAFS Test Interface</h1>
+
+    <button id="login">Login with WebAthena</button><br>
+    <input type="text" value="/athena.mit.edu/" id="path"><br>
+    <button id="list">List Directory</button><br>
+    <button id="fetch">Fetch File</button><br>
+    <textarea id="status" cols="60" rows="20">output appears here</textarea>
+
+    <script src="sjcl.js"></script>
+    <script src="winchan.js"></script>
+    <script src="webathena.js"></script>
+    <script>
+      (function() {
+        var session = {session: null, token: null};
+        var status = document.getElementById("status");
+        var pathbox = document.getElementById("path");
+
+        function try_session(cb) {
+          if (session.session && session.token) {
+            cb(session.session, session.token);
+          } else {
+            var req = new XMLHttpRequest();
+            req.addEventListener("load", function() {
+              var jd = JSON.parse(this.responseText);
+              if (jd.session && jd.token) {
+                session.session = jd.session;
+                session.token = jd.token;
+                cb(jd.session, jd.token);
+              }
+            });
+            req.open("POST", "/begin", true);
+            req.send(JSON.stringify({})); 
+          }
+        }
+
+        function try_list(path) {
+          try_session(function(session, token) {
+            var req = new XMLHttpRequest();
+            req.addEventListener("load", function() {
+              var jd = JSON.parse(this.responseText);
+              if (jd.status == "LISTDATA") {
+                status.textContent = "LIST:\n" + JSON.parse(atob(jd.param)).join("\n");
+              } else {
+                status.textContent = "RESULT: " + jd.status + " " + jd.param;
+              }
+            });
+            req.open("POST", "/list");
+            req.setRequestHeader("Content-type", "application/json");
+            req.send(JSON.stringify({"session": session, "token": token, "path": path}));
+          });
+        }
+
+        function try_fetch(path) {
+          try_session(function(session, token) {
+            var req = new XMLHttpRequest();
+            req.addEventListener("load", function() {
+              var jd = JSON.parse(this.responseText);
+              if (jd.status == "FILEDATA") {
+                status.textContent = "FILE:\n" + atob(jd.param);
+              } else {
+                status.textContent = "RESULT: " + jd.status + " " + jd.param;
+              }
+            });
+            req.open("POST", "/fetch");
+            req.setRequestHeader("Content-type", "application/json");
+            req.send(JSON.stringify({"session": session, "token": token, "path": path}));
+          });
+        }
+
+        function try_auth(creds) {
+          try_session(function(session, token) {
+            var req = new XMLHttpRequest();
+            req.addEventListener("load", function() {
+              var jd = JSON.parse(this.responseText);
+              if (jd.status == "ACCEPT_AUTH") {
+                status.textContent = "AUTHED";
+              } else {
+                status.textContent = "FAILED: " + jd.status + " " + jd.param;
+              }
+            });
+            req.open("POST", "/auth");
+            req.setRequestHeader("Content-type", "application/json");
+            req.send(JSON.stringify({"session": session, "token": token, "cred": JSON.stringify(creds)}));
+          });
+        }
+
+        var btn = document.getElementById("login");
+        btn.disabled = false;
+        btn.onclick = function() {
+          btn.disabled = true;
+          var principal = ["afs", "athena.mit.edu"];
+          WinChan.open({
+            url: "https://webathena.mit.edu/#!request_ticket_v1",
+            relay_url: "https://webathena.mit.edu/relay.html",
+            params: {
+              realm: "ATHENA.MIT.EDU",
+              principal: ["afs", "athena.mit.edu"]
+            }
+          }, function (err, resp) {
+            if (err) {
+              console.log("failed", err);
+            } else if (resp.status !== "OK") {
+              console.log("failed_r", resp);
+            } else {
+              try_auth(resp.session);
+            }
+            btn.disabled = false;
+          });
+        };
+
+        var btnl = document.getElementById("list");
+        btnl.onclick = function() {
+          try_list(pathbox.value);
+        };
+
+        var btnf = document.getElementById("fetch");
+        btnf.onclick = function() {
+          try_fetch(pathbox.value);
+        };
+      })();
+    </script>
+  </body>
+</html>

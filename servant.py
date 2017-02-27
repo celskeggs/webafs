@@ -33,7 +33,7 @@ for line in sys.stdin:
 				if found_data:
 					try:
 						if run_aklog(found_data[1]):
-							out = (b"ACCEPT_AUTH", b"")
+							out = (b"ACCEPT_AUTH", found_data[0].encode())
 						else:
 							out = (b"FAIL", b"AKLOG_FAILED")
 					except subprocess.TimeoutExpired:

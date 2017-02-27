@@ -1,4 +1,5 @@
 import os
+import stat
 import sys
 
 # DO NOT USE THIS MODULE MULTITHREADED!
@@ -17,11 +18,9 @@ class PathFD:
 	def root():
 		if PathFD._root_cache is None:
 			PathFD._root_cache = PathFD(os.open(ROOT, os.O_RDONLY | os.O_CLOEXEC | os.O_DIRECTORY | os.O_NOCTTY | os.O_NOFOLLOW | os.O_PATH))
-		print("ROOT")
 		return PathFD._root_cache
 
 	def directory(self, dirname):
-		print("DIRECTORY", dirname)
 		assert self.fd is not None
 		assert dirname not in (".", "..") and "/" not in dirname
 		if dirname not in self.cache:
@@ -29,24 +28,31 @@ class PathFD:
 		return self.cache[dirname]
 
 	def openfile(self, filename):
-		print("FILE", filename)
 		assert self.fd is not None
 		assert filename not in (".", "..") and "/" not in filename
 		fd = os.open(filename, os.O_RDONLY | os.O_CLOEXEC | os.O_NOCTTY | os.O_NOFOLLOW, dir_fd = self.fd)
 		try:
 			return open(fd, "rb")
 		except:
-			print("Closing fd (2):", fd)
 			os.close(fd)
 
 	def listfiles(self):
-		print("LIST")
 		assert self.fd is not None
 		local_fd = os.open(".", os.O_RDONLY | os.O_CLOEXEC | os.O_NOCTTY | os.O_NOFOLLOW, dir_fd=self.fd)
 		try:
 			return os.listdir(local_fd)
 		finally:
 			os.close(local_fd)
+
+	def isdir(self, subdir):
+		assert self.fd is not None
+		try:
+			os.close(os.open(subdir, os.O_RDONLY | os.O_CLOEXEC | os.O_DIRECTORY | os.O_NOCTTY | os.O_NOFOLLOW | os.O_PATH, dir_fd = self.fd))
+		except PermissionError:
+			return False  # not a directory -- you can stat directories even if you don't have access
+		except NotADirectoryError:
+			return False  # also not a directory
+		return True # otherwise? since it was O_DIRECTORY, probably a directory.
 
 	def close(self):
 		if self.cache:
@@ -82,7 +88,9 @@ def split_components(path):
 def traverse(path):
 	location = PathFD.root()
 	for component in split_components(path):
-		if component == ".":
+		if not component:
+			continue
+		elif component == ".":
 			continue
 		elif component == "..":
 			raise FileNotFoundError("Cannot traverse upward!")
@@ -92,7 +100,13 @@ def traverse(path):
 
 # these all start at /afs
 def safe_list(path):
-	return traverse(path).listfiles()
+	print("started listing", path, file=sys.stderr)
+	try:
+		base = traverse(path)
+		files = base.listfiles()
+		return [(file + "/" if base.isdir(file) else file) for file in files]
+	finally:
+		print("finished listing", path, file=sys.stderr)
 
 def safe_load(path):
 	path, filename = os.path.split(path)

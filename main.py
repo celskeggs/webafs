@@ -159,7 +159,7 @@ class WebAFS(object):
 			return False, {"status": "FAIL", "param": "INVALID_AUTH"}
 		expected = access_tokens.get(coord_uuid, None)
 		if expected is None:
-			return False, {"status": "FAIL", "param": "INVALID_AUTH"}
+			return False, {"status": "FAIL", "param": "UNKNOWN_UUID"}
 		if hmac.compare_digest(access_token, expected):
 			return True, coord_uuid
 		else:

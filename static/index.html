@@ -3,99 +3,315 @@
   <head>
     <meta charset="utf-8">
     <title>WebAFS</title>
+    <style>
+      body, input, button {
+        font-family: "serif";
+      }
+      #header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        background-color: #AAAAAA;
+        height: 100px;
+        padding: 10px;
+        border-bottom: solid black 2px;
+      }
+      #footer {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background-color: #AAAAAA;
+        padding: 10px;
+        text-align: right;
+        border-top: solid black 2px;
+      }
+      #header-spacing {
+        margin-bottom: 120px;
+      }
+      #footer-spacing {
+        margin-bottom: 40px;
+      }
+      #title {
+        position: absolute;
+        left: 10px;
+        top: 10px;
+        font-size: 24pt;
+        font-weight: bold;
+      }
+      #navinput {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        left: 200px;
+      }
+      #navspace, #navtext {
+        background-color: white;
+        border: none;
+        padding: 3px;
+        padding-left: 0px;
+        font-size: 12pt;
+        height: 12pt;
+      }
+      #navtext {
+        width: 100%;
+      }
+      #navpart {
+        overflow: hidden;
+        width: auto;
+      }
+      #navspace {
+        float: left;
+        padding-left: 3px;
+        padding-right: 0px;
+        padding-top: 2px;
+        height: 13pt;
+      }
+      #open {
+        float: right;
+        padding-left: 5px;
+      }
+      #openbtn {
+        background-color: #88FFFF;
+        border: none;
+        padding: 3px;
+        padding-top: 1px;
+        font-size: 12pt;
+        height: 22px;
+      }
+      #crumbs {
+        position: absolute;
+        bottom: 20px;
+        left: 220px;
+        color: #444444;
+      }
+      #crumbs span {
+        color: #000000;
+        text-decoration: underline;
+      }
+      #crumbs span:hover {
+        color: #0000FF;
+        cursor: pointer;
+      }
+      #crumbs span:active {
+        color: #FFFFFF;
+      }
+      #login {
+        position: absolute;
+        bottom: 10px;
+        left: 10px;
+      }
+      #loginstatus {
+        margin-bottom: 5px;
+      }
+      #content {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: flex-start;
+      }
+      #folder {
+      }
+      .subfolder, .file {
+        flex-basis: 120px;
+        text-align: center;
+        height: 120px;
+        border: solid black 1px;
+        border-radius: 5px;
+        margin-right: 20px;
+        margin-left: 20px;
+        margin-bottom: 10px;
+      }
+      .subfolder {
+        border-width: 3px;
+        margin-top: -2px;
+        margin-bottom: 8px;
+        margin-right: 18px;
+        margin-left: 18px;
+        background-color: #DDDDDD;
+      }
+      .subfolder:hover, .file:hover {
+        background-color: #AADDFF;
+        border-color: #0000FF;
+        color: #0000FF;
+        text-decoration: underline;
+        cursor: pointer;
+      }
+      .subfolder:active, .file:active {
+        background-color: #CCFFCC;
+        color: #008800;
+        border-color: #008800;
+      }
+      .ftitle {
+        margin-top: 45px;
+      }
+      .action {
+        margin-top: 0px;
+        font-size: 10pt;
+        color: #888888;
+      }
+      .subfolder .action {
+        color: #777777;
+      }
+      #loading {
+        text-align: center;
+        font-family: mono;
+        font-size: 20pt;
+        letter-spacing: 30px;
+      }
+      #downloader {
+        display: none;
+      }
+    </style>
   </head>
   <body>
-    <h1>WebAFS Test Interface</h1>
-
-    <button id="login">Login with WebAthena</button><br>
-    <input type="text" value="/athena.mit.edu/" id="path"><br>
-    <button id="list">List Directory</button><br>
-    <button id="fetch">Fetch File</button><br>
-    <textarea id="status" cols="60" rows="20">output appears here</textarea>
-
+    <div id="header">
+      <div id="title">WebAFS</div>
+      <div id="navinput"><div id="navspace">/afs/</div><div id="open"><button id="openbtn">==&gt;</button></div><div id="navpart"><input id="navtext" type="text" autofocus="true" placeholder="athena.mit.edu/user/"></div></div>
+      <div id="crumbs">/ <span>afs</span> / <span>athena.mit.edu</span> / <span>user</span> / <span>c</span> / <span>e</span> / <span>cela</span> /</div>
+      <div id="login"><div id="loginstatus">User: anonymous</div><button id="loginbtn">Authenticate</button></div>
+    </div>
+    <div id="header-spacing">&nbsp;</div>
+    <div id="folder">
+      <div id="content">
+        <div class="subfolder"><div class="ftitle">Public/</div><div class="action">(browse)</div></div>
+        <div class="file"><div class="ftitle">test.txt</div><div class="action">(download)</div></div>
+      </div>
+      <div id="loading">LOADING</div>
+    </div>
+    <!-- <iframe id="downloader"></iframe> -->
+    <a id="downloader"></a>
+    <div id="footer-spacing">&nbsp;</div>
+    <div id="footer">
+      WebAFS is a project of <a href="http://sipb.mit.edu/">SIPB</a>. Copyright &copy; 2017 cela. MIT licensed. Questions? Contact <a href="mailto:webafs@mit.edu">webafs@mit.edu</a>.
+    </div>
     <script src="sjcl.js"></script>
     <script src="winchan.js"></script>
     <script src="webathena.js"></script>
     <script>
       (function() {
         var session = {session: null, token: null};
-        var status = document.getElementById("status");
-        var pathbox = document.getElementById("path");
-
-        function try_session(cb) {
+        function json_request(cb, err, endpoint, data) {
+          var req = new XMLHttpRequest();
+          req.addEventListener("load", function() {
+            var json = JSON.parse(this.responseText);
+            if (json) {
+              cb(json);
+            } else {
+              err("bad json from endpoint " + endpoint);
+            }
+          });
+          req.addEventListener("error", function() {
+            err("xhr failed");
+          });
+          req.open("POST", endpoint, true);
+          req.setRequestHeader("Content-type", "application/json");
+          req.send(JSON.stringify(data));
+        }
+        function with_session(cb, err) {
           if (session.session && session.token) {
             cb(session.session, session.token);
           } else {
-            var req = new XMLHttpRequest();
-            req.addEventListener("load", function() {
-              var jd = JSON.parse(this.responseText);
-              if (jd.session && jd.token) {
+            json_request(function(jd) {
+              if (jd.session && jd.token && session.session === null && session.token === null) {
                 session.session = jd.session;
                 session.token = jd.token;
-                cb(jd.session, jd.token);
               }
-            });
-            req.open("POST", "/begin", true);
-            req.send(JSON.stringify({})); 
+              if (session.session && session.token) {
+                cb(session.session, session.token);
+              } else {
+                err("could not get session");
+              }
+            }, err, "/begin", {});
           }
         }
-
-        function try_list(path) {
-          try_session(function(session, token) {
-            var req = new XMLHttpRequest();
-            req.addEventListener("load", function() {
-              var jd = JSON.parse(this.responseText);
-              if (jd.status == "LISTDATA") {
-                status.textContent = "LIST:\n" + JSON.parse(atob(jd.param)).join("\n");
+        function clear_session() {
+          session.session = session.token = null;
+        }
+        function session_request(cb, err, endpoint, data, has_looped) {
+          with_session(function(session, token) {
+            data.session = session;
+            data.token = token;
+            json_request(function(jd) {
+              var status = jd.status, param = jd.param;
+              if (status) {
+                if (status == "FAIL" && param == "INVALID_AUTH") {
+                  err("invalid authentication -- reauth required"); // TODO
+                } else if (status == "FAIL" && param == "UNKNOWN_UUID") { // session is invalid
+                  clear_session();
+                  if (!has_looped) {
+                    console.log("session has failed -- re-establishing session");
+                    data.session = data.token = undefined;
+                    session_request(cb, err, endpoint, data, true);
+                  } else {
+                    err("session failed twice in a row");
+                  }
+                } else if (status == "FAIL" && param == "INVALID_INPUTS") {
+                  err("invalid inputs to server");
+                } else {
+                  cb(status, param);
+                }
               } else {
-                status.textContent = "RESULT: " + jd.status + " " + jd.param;
+                err("malformed json response from " + endpoint);
               }
-            });
-            req.open("POST", "/list");
-            req.setRequestHeader("Content-type", "application/json");
-            req.send(JSON.stringify({"session": session, "token": token, "path": path}));
-          });
+            }, err, endpoint, data);
+          }, err);
+        }
+        function afs_auth(credentials, cb, err) {
+          session_request(function(status, param) {
+            if (status == "ACCEPT_AUTH") {
+              cb(param);
+            } else if (status == "FAIL") {
+              err("failure message: " + param);
+            } else {
+              err("unknown status: " + status);
+            }
+          }, err, "/auth", {"cred": JSON.stringify(credentials)});
+        }
+        function afs_list(path, cb, err) {
+          session_request(function(status, param) {
+            if (status == "LISTDATA") {
+              cb(JSON.parse(atob(param)));
+            } else if (status == "NOEXIST") {
+              err("folder does not exist");
+            } else if (status == "NOPERM") {
+              err("access denied");
+            } else if (status == "NODIR") {
+              err("not a directory");
+            } else if (status == "SYMBOLIC") {
+              err("cannot traverse symbolic links");
+            } else if (status == "OSERROR") {
+              err("unknown oserror on server");
+            } else if (status == "FAIL") {
+              err("failure message: " + param);
+            } else {
+              err("unknown status: " + status);
+            }
+          }, err, "/list", {"path": path});
+        }
+        function afs_load(path, cb, err) {
+          session_request(function(status, param) {
+            if (status == "FILEDATA") {
+              cb(atob(param));
+            } else if (status == "NOEXIST") {
+              err("folder does not exist");
+            } else if (status == "NOPERM") {
+              err("access denied");
+            } else if (status == "SYMBOLIC") {
+              err("cannot traverse symbolic links");
+            } else if (status == "OSERROR") {
+              err("unknown oserror on server");
+            } else if (status == "FAIL") {
+              err("failure message: " + param);
+            } else {
+              err("unknown status: " + status);
+            }
+          }, err, "/fetch", {"path": path});
         }
 
-        function try_fetch(path) {
-          try_session(function(session, token) {
-            var req = new XMLHttpRequest();
-            req.addEventListener("load", function() {
-              var jd = JSON.parse(this.responseText);
-              if (jd.status == "FILEDATA") {
-                status.textContent = "FILE:\n" + atob(jd.param);
-              } else {
-                status.textContent = "RESULT: " + jd.status + " " + jd.param;
-              }
-            });
-            req.open("POST", "/fetch");
-            req.setRequestHeader("Content-type", "application/json");
-            req.send(JSON.stringify({"session": session, "token": token, "path": path}));
-          });
-        }
-
-        function try_auth(creds) {
-          try_session(function(session, token) {
-            var req = new XMLHttpRequest();
-            req.addEventListener("load", function() {
-              var jd = JSON.parse(this.responseText);
-              if (jd.status == "ACCEPT_AUTH") {
-                status.textContent = "AUTHED";
-              } else {
-                status.textContent = "FAILED: " + jd.status + " " + jd.param;
-              }
-            });
-            req.open("POST", "/auth");
-            req.setRequestHeader("Content-type", "application/json");
-            req.send(JSON.stringify({"session": session, "token": token, "cred": JSON.stringify(creds)}));
-          });
-        }
-
-        var btn = document.getElementById("login");
-        btn.disabled = false;
-        btn.onclick = function() {
-          btn.disabled = true;
-          var principal = ["afs", "athena.mit.edu"];
+        function attempt_auth(cb, cerr) {
           WinChan.open({
             url: "https://webathena.mit.edu/#!request_ticket_v1",
             relay_url: "https://webathena.mit.edu/relay.html",
@@ -105,25 +321,151 @@
             }
           }, function (err, resp) {
             if (err) {
-              console.log("failed", err);
+              cerr("winchan failed: " + err);
             } else if (resp.status !== "OK") {
-              console.log("failed_r", resp);
+              cerr("failed to get tickets: " + resp.status);
             } else {
-              try_auth(resp.session);
+              afs_auth(resp.session, cb, cerr);
             }
-            btn.disabled = false;
           });
-        };
+        }
 
-        var btnl = document.getElementById("list");
-        btnl.onclick = function() {
-          try_list(pathbox.value);
-        };
+        function download_file(file_name, file_data) {
+          // downloader.src = 'data:application/octet-stream;base64,' + btoa(file_data);
+          downloader.href = 'data:application/octet-stream;base64,' + btoa(file_data);
+          downloader.download = file_name;
+          downloader.click();
+          downloader.href = "";
+        }
 
-        var btnf = document.getElementById("fetch");
-        btnf.onclick = function() {
-          try_fetch(pathbox.value);
+        var authenticate = document.getElementById("loginbtn");
+        var loginstatus = document.getElementById("loginstatus");
+        var crumbs = document.getElementById("crumbs");
+        var navtext = document.getElementById("navtext");
+        var openbtn = document.getElementById("openbtn");
+        var content = document.getElementById("content");
+        var loading = document.getElementById("loading");
+        var downloader = document.getElementById("downloader");
+        function report_error(err) {
+          console.log(err);
+          alert("failed: " + err);
+        }
+        function on_openbtn() {
+          change_path(navtext.value);
+        }
+        openbtn.onclick = on_openbtn;
+        navtext.onkeypress = function(e) {
+          if (!e) { e = window.event; }
+          var keyCode = e.keyCode || e.which;
+          if (keyCode == 13) {
+            on_openbtn();
+            return false;
+          }
         };
+        authenticate.onclick = function() {
+          attempt_auth(function(uname) {
+            loginstatus.textContent = "User: " + uname;
+            request_update();
+          }, report_error);
+        };
+        function update_view(path_elems, folders, files, hit_crumb, hit_folder, hit_file) {
+          var built_crumbs = "/";
+          for (var i = 0; i < path_elems.length; i++) {
+            built_crumbs += " <span></span> /";
+          }
+          crumbs.innerHTML = built_crumbs;
+          for (var i = 0; i < path_elems.length; i++) {
+            crumbs.children[i].textContent = path_elems[i];
+            crumbs.children[i].onclick = function() { hit_crumb(this); }.bind(i);
+          }
+          if (folders.length == 0 && files.length == 0) {
+            loading.style.display = "block";
+            content.innerHTML = "";
+          } else {
+            var built_folder = "";
+            for (var i = 0; i < folders.length; i++) {
+              var action = folders[i] == ".." ? "exit" : "browse";
+              built_folder += "<div class='subfolder'><div class='ftitle'></div><div class='action'>(" + action + ")</div></div>";
+            }
+            for (var i = 0; i < files.length; i++) {
+              built_folder += "<div class='file'><div class='ftitle'></div><div class='action'>(download)</div></div>";
+            }
+            content.innerHTML = built_folder;
+            for (var i = 0; i < folders.length; i++) {
+              content.children[i].children[0].textContent = folders[i];
+              content.children[i].onclick = function() { hit_folder(this); }.bind(folders[i]);
+            }
+            for (var i = 0; i < files.length; i++) {
+              content.children[folders.length+i].children[0].textContent = files[i];
+              content.children[folders.length+i].onclick = function() { hit_file(this); }.bind(files[i]);
+            }
+            loading.style.display = "none";
+          }
+        }
+        var state_path = ["afs", "athena.mit.edu", "user"];
+        var state_folders = [];
+        var state_files = [];
+        function rerender_view() {
+          function nav_path(i) {
+            state_path.splice(i + 1);
+            request_update();
+          }
+          function nav_folder(name) {
+            if (name == "..") {
+              state_path.pop();
+            } else if (name.endsWith("/")) {
+              state_path.push(name.substring(0, name.length - 1));
+            } else {
+              state_path.push(name);
+            }
+            request_update();
+          }
+          function nav_file(name) {
+            afs_load(state_path.slice(1).join("/") + "/" + name, function(filedata) {
+              download_file(name, filedata);
+            }, report_error);
+          }
+          update_view(state_path, state_folders, state_files, nav_path, nav_folder, nav_file);
+        }
+        function change_path(new_path_str) {
+          var path = new_path_str.split("/");
+          state_path = ["afs"]
+          for (var i = 0; i < path.length; i++) {
+            if (path[i] !== "") {
+              state_path.push(path[i]);
+            }
+          }
+          request_update();
+        }
+        function request_update() {
+          state_folders = [];
+          state_files = [];
+          if (state_path[0] != "afs") {
+            console.log("unexpected first path element: this will probably fail");
+          }
+          navtext.value = state_path.slice(1).join("/");
+          rerender_view();
+          var path = state_path;
+          afs_list(path.slice(1).join("/"), function(listing) {
+            state_path = path; // make sure it's synchronized
+            state_folders = [];
+            state_files = [];
+            if (path.length > 1) {
+              state_folders.push("..");
+            }
+            for (var i = 0; i < listing.length; i++) {
+              if (listing[i].endsWith("/")) {
+                state_folders.push(listing[i]);
+              } else {
+                state_files.push(listing[i]);
+              }
+            }
+            state_folders.sort();
+            state_files.sort();
+            rerender_view();
+          }, report_error);
+        }
+        request_update();
       })();
     </script>
   </body>
