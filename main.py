@@ -28,6 +28,7 @@ coord_lock = threading.Condition()
 
 class Coordinator(object):
 	def __init__(self, coord_uuid):
+		assert type(coord_uuid) == uuid.UUID
 		self.uuid = coord_uuid
 		self.cid = str(coord_uuid).replace("-", "")
 		os.system("python3 coordinator.py %s &" % self.cid)
