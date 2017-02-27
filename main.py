@@ -204,4 +204,5 @@ class WebAFS(object):
 			code, param = interact_list(data, base64.b64encode(path.encode()))
 		return {"status": code.decode(), "param": param.decode()}
 
+cherrypy.config.update({'environment': 'production'})
 cherrypy.quickstart(WebAFS(), "/", {"/": {"tools.staticdir.on": True, "tools.staticdir.dir": "/opt/webafs/static", "tools.staticdir.index": "index.html"}})

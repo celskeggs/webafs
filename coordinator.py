@@ -1,4 +1,4 @@
-#!/bin/python3
+#!/usr/bin/env python3
 # this file runs outside and provides a connection to the servant environment
 import traceback
 import subprocess
@@ -25,7 +25,7 @@ def subprocess_interact(command):
 		time.sleep(10)
 		subprocess_current = None
 	if subprocess_current is None:
-		subprocess_current = subprocess.Popen(["pagsh", "-c", "firejail --quiet --profile=servant.profile /bin/python3 /opt/webafs/inside/servant.py"], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+		subprocess_current = subprocess.Popen(["pagsh", "-c", "firejail --quiet --profile=servant.profile /usr/bin/env python3 /opt/webafs/inside/servant.py"], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
 		time.sleep(0.5)
 		if subprocess_current.poll() is not None:
 			subprocess_current = None

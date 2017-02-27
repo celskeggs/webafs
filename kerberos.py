@@ -166,7 +166,7 @@ def make_ccache(cred):
 
 def parse(query): # query is json-encoded from WebAthena
     try:
-        cred = json.loads(query)
+        cred = json.loads(query.decode())
         untrusted_username = cred["cname"]["nameString"][0]
         ccache_data = make_ccache(cred)
         return untrusted_username, ccache_data

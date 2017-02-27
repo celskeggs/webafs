@@ -1,0 +1,12 @@
+[Unit]
+Description=A web-based client for OpenAFS
+After=network.target
+
+[Service]
+User=webafs
+Type=simple
+WorkingDirectory=/opt/webafs
+ExecStart=/usr/bin/env python3 main.py
+
+[Install]
+WantedBy=multi-user.target
