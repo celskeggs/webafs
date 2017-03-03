@@ -10,7 +10,6 @@ class PathFD:
 	def __init__(self, fd):
 		assert type(fd) is int
 		self.fd = fd
-		self.cache = {}
 
 	_root_cache = None
 
@@ -23,9 +22,7 @@ class PathFD:
 	def directory(self, dirname):
 		assert self.fd is not None
 		assert dirname not in (".", "..") and "/" not in dirname
-		if dirname not in self.cache:
-			self.cache[dirname] = PathFD(os.open(dirname, os.O_RDONLY | os.O_CLOEXEC | os.O_DIRECTORY | os.O_NOCTTY | os.O_NOFOLLOW | os.O_PATH, dir_fd = self.fd))
-		return self.cache[dirname]
+		return PathFD(os.open(dirname, os.O_RDONLY | os.O_CLOEXEC | os.O_DIRECTORY | os.O_NOCTTY | os.O_NOFOLLOW | os.O_PATH, dir_fd = self.fd))
 
 	def openfile(self, filename):
 		assert self.fd is not None
@@ -55,17 +52,12 @@ class PathFD:
 		return True # otherwise? since it was O_DIRECTORY, probably a directory.
 
 	def close(self):
-		if self.cache:
-			for elem in self.cache.values():
-				elem.close()
 		if type(self.fd) is int:
 			os.close(self.fd)
 			self.fd = None
-			self.cache = None
 			return True
 		else:
 			assert self.fd is None
-			assert not self.cache
 			return False
 
 	def __del__(self):
