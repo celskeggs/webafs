@@ -31,7 +31,7 @@ class Coordinator(object):
 		assert type(coord_uuid) == uuid.UUID
 		self.uuid = coord_uuid
 		self.cid = str(coord_uuid).replace("-", "")
-		os.system("python3 coordinator.py %s &" % self.cid)
+		os.system("python3.6 coordinator.py %s &" % self.cid)
 		self.path = "%s/%s" % (COORD_DIR, self.cid)
 		i = 50
 		while not os.path.exists(self.path) and i > 0:

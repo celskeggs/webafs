@@ -37,7 +37,8 @@ class PathFD:
 		assert self.fd is not None
 		local_fd = os.open(".", os.O_RDONLY | os.O_CLOEXEC | os.O_NOCTTY | os.O_NOFOLLOW, dir_fd=self.fd)
 		try:
-			return os.listdir(local_fd)
+			assert type(local_fd) == int
+			return os.scandir("/proc/self/fd/%d" % local_fd)
 		finally:
 			os.close(local_fd)
 
@@ -95,8 +96,8 @@ def safe_list(path):
 	print("started listing", path, file=sys.stderr)
 	try:
 		base = traverse(path)
-		files = base.listfiles()
-		return [(file + "/" if base.isdir(file) else file) for file in files]
+		with base.listfiles() as files:
+			return [(file.name + "/" if file.is_dir(follow_symlinks=False) else file.name) for file in files]
 	finally:
 		print("finished listing", path, file=sys.stderr)
 

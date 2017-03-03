@@ -1,4 +1,4 @@
-#!/bin/python3
+#!/bin/python3.6
 # this file runs within the firejailed and pagsh'd environment.
 # it authenticates to afs with aklog.
 # all communication with the outside world is done through stdio.

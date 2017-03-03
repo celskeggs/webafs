@@ -6,7 +6,7 @@ After=network.target
 User=webafs
 Type=simple
 WorkingDirectory=/opt/webafs
-ExecStart=/usr/bin/env python3 main.py
+ExecStart=/usr/bin/env python3.6 main.py
 
 [Install]
 WantedBy=multi-user.target

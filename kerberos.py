@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3.6
 
 # This file is made out of MIT-licensed sample code from David Ben,
 # specifically the shellinabox sample code.
