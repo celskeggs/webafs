@@ -78,6 +78,19 @@ for line in sys.stdin:
 							out = (b"SYMBOLIC", b"")
 						else:
 							out = (b"OSERROR", b"")
+			elif command = b"REFLOCKER":
+				name = base64.b64decode(argument).decode()
+				if ".." in name or "/" in name:
+					out = (b"FAIL", b"DISALLOWED_PATH")
+				else:
+					try:
+						linkref = safe_traverse.safe_readlocker(name)
+						if linkref is None:
+							out = (b"NOEXIST", b"")
+						else:
+							out = (b"REFDATA", base64.b64encode(linkref.encode()))
+					except OSError:
+						out = (b"OSERROR", b"")
 			else:
 				out = (b"FAIL", b"INVALID_COMMAND")
 		except:

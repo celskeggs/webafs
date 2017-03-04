@@ -136,6 +136,13 @@ def interact_list(coord_uuid, postafs_path):
 		code = b"FAIL"
 	return code, param
 
+def interact_reflocker(coord_uuid, lockername):
+	success, code, param = interact(coord_uuid, b"REFLOCKER", lockername)
+	if not success:
+		param = code
+		code = b"FAIL"
+	return code, param
+
 def cleanup_client_context(coord_uuid):
 	del access_tokens[coord_uuid]
 
@@ -204,6 +211,19 @@ class WebAFS(object):
 			code, param = b"FAIL", b"INVALID_INPUTS"
 		else:
 			code, param = interact_list(data, base64.b64encode(path.encode()))
+		return {"status": code.decode(), "param": param.decode()}
+
+	@cherrypy.expose
+	@cherrypy.tools.json_in()
+	@cherrypy.tools.json_out()
+	def reflocker(self):
+		success, data = self._check_token()
+		if not success: return data
+		locker = cherrypy.request.json.get("locker", None)
+		if locker is None:
+			code, param = b"FAIL", b"INVALID_INPUTS"
+		else:
+			code, param = interact_reflocker(data, base64.b64encode(locker.encode()))
 		return {"status": code.decode(), "param": param.decode()}
 
 try:

@@ -5,6 +5,7 @@ import sys
 # DO NOT USE THIS MODULE MULTITHREADED!
 
 ROOT = "/afs"
+LOCKER_ROOT = "/mit"
 
 class PathFD:
 	def __init__(self, fd):
@@ -105,3 +106,12 @@ def safe_load(path):
 	path, filename = os.path.split(path)
 	with traverse(path).openfile(filename) as f:
 		return f.read()
+
+def safe_readlocker(lockername):
+	if "/" in lockername or lockername[0] == ".":
+		return None
+	else:
+		try:
+			return os.readlink("%s/%s" % (LOCKER_ROOT, lockername))
+		except FileNotFoundError:
+			return None
