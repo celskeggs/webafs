@@ -14,6 +14,7 @@ import socket
 # ---- start coordinator handling ----
 
 COORD_DIR = "/opt/webafs/coordinator"
+IOSOCK_PATH = "/opt/webafs/iodir/iosock"
 found_any = False
 # close out lingering coordinators
 # TODO: reuse existing coordinators?
@@ -205,5 +206,11 @@ class WebAFS(object):
 			code, param = interact_list(data, base64.b64encode(path.encode()))
 		return {"status": code.decode(), "param": param.decode()}
 
-cherrypy.config.update({'environment': 'production'})
+try:
+	os.unlink(IOSOCK_PATH)
+except:
+	pass
+os.chmod(os.path.dirname(IOSOCK_PATH), 0o0750)
+cherrypy.engine.subscribe("start", lambda: os.chmod(IOSOCK_PATH, 0o0777), priority=90)
+cherrypy.config.update({'environment': 'production', 'server.socket_file': IOSOCK_PATH, 'log.screen': True})
 cherrypy.quickstart(WebAFS(), "/", {"/": {"tools.staticdir.on": True, "tools.staticdir.dir": "/opt/webafs/static", "tools.staticdir.index": "index.html"}})
