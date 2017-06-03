@@ -1,0 +1,22 @@
+Security checklist:
+ [ ] Set a root password
+ [ ] Stop/disable and possibly uninstall all unnecessary services
+ [ ] Install needrestart for debian
+ [ ] Restrict control-alt-del through console
+ [ ] Restrict SysRq
+ [ ] Make /tmp noexec,nodev,nosuid
+ [ ] Review partition table
+ [ ] Perhaps use pam_tmpdir
+ [ ] Consider logcheck
+ [ ] Use a loghost?
+ [ ] grsec?
+ [ ] Audit filesystem? (sxid, aide, tripwire, integrit, samhain)
+ [ ] checksecurity
+ [ ] configure firewall
+ [ ] Use cron-apt or apticron or other update checker
+ [ ] Try snort (test with idswakeup)
+ [ ] Change lots of world-readable files to not be
+ [ ] review cronjobs
+ [ ] kernel.dmesg_restrict = 1
+ [ ] kernel.kptr_restrict = 1
+ [ ] use hidepid

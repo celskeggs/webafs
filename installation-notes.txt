@@ -1,0 +1,47 @@
+* Set up a new virtual machine (debian 8)
+  - XVM is flaky and probably requires lots of VM destruction and re-creation
+* Add jessie-backports to sources
+* apt-get update && apt-get upgrade
+* install psmisc nginx firejail curl
+* adduser webafs
+* mkdir /opt/webafs
+* chown webafs:webafs /opt/webafs
+* wget -N https://debathena.mit.edu/apt/debathena-archive.asc
+* echo "6ff5cdce10a455cf7c37846e6f80623302a08a71a707eeaa51d01435235bfab9  debathena-archive.asc" | sha256sum --check
+* apt-key add debathena-archive.asc
+* nano /etc/apt/sources.list
+  Add these lines:
+    deb http://debathena.mit.edu/apt jessie debathena debathena-config debathena-system
+    deb-src http://debathena.mit.edu/apt jessie debathena debathena-config debathena-system
+* apt-get update
+* apt-get install linux-headers-$(uname -r)
+* apt-get install openafs-modules-dkms
+* apt-get install debathena-afs-config debathena-hesiod-config debathena-kerberos-config debathena-mit-automounter
+  - configuration questions:
+  - AFS cell: athena.mit.edu
+  - other options: ???? (accidentally skipped them during install)
+  this step takes a while, because of dkms
+* systemctl status openafs
+* confirm that /afs/athena.mit.edu, /afs/sipb.mit.edu, and /mit work properly
+* apt-get install git python3 python3-pip ssh htop
+* nano /etc/ssh/sshd_config
+  Turn off password-based auth; turn on GSSAPI auth.
+* apt-get install ufw
+* confirm that nginx is accessible via localhost and externally
+* ufw enable
+* confirm that nginx is accessible via localhost but not externally
+* su webafs
+  * git clone https://github.com/celskeggs/webafs
+  * install.sh
+* cp /home/webafs/webafs/webafs.service /lib/systemd/system/
+* Review webafs.service to make sure it looks fine
+* apt-get install zlib1g-dev ccache libssl-dev
+* Download the latest revision of Python 3.6 from python.org
+* tar -xf Python-3.6-?.tar.xz
+* ./configure --enable-optimizations
+* make
+* make altinstall
+* su webafs
+  * pip3.6 install --user cherrypy
+  * mkdir /opt/webafs/iodir (TODO: include in install.sh)
+* systemctl start webafs
